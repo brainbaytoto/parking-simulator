@@ -92,25 +92,33 @@ export class Renderer {
   }
 
   drawCar(car: Car) {
-    const { state, config } = car;
+    const { config } = car;
     const ctx = this.ctx;
+    const corners = car.getCorners();
 
-    ctx.save();
-    ctx.translate(state.x, state.y);
-    ctx.rotate(state.heading);
-
-    // Car body
+    // Draw car body using corners
     ctx.fillStyle = '#74b9ff';
     ctx.strokeStyle = '#0984e3';
     ctx.lineWidth = 2;
 
+    ctx.beginPath();
+    ctx.moveTo(corners[0].x, corners[0].y);
+    ctx.lineTo(corners[1].x, corners[1].y);
+    ctx.lineTo(corners[2].x, corners[2].y);
+    ctx.lineTo(corners[3].x, corners[3].y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Draw windshield and headlights using car center and heading
+    const center = car.getCarCenter();
+    const heading = car.state.heading;
     const halfLength = config.length / 2;
     const halfWidth = config.width / 2;
 
-    ctx.beginPath();
-    ctx.roundRect(-halfLength, -halfWidth, config.length, config.width, 5);
-    ctx.fill();
-    ctx.stroke();
+    ctx.save();
+    ctx.translate(center.x, center.y);
+    ctx.rotate(heading);
 
     // Windshield (to show front of car)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';

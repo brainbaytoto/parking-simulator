@@ -1,12 +1,14 @@
 // Car physics using the bicycle model (simplified Ackermann steering)
-// The key insight: rear wheels are fixed, car rotates around rear axle
+// Key insight: The REAR AXLE moves along the heading direction, not the car center
+// The car rotates around a point on the extended rear axle line
 
 export interface CarState {
-  x: number;
-  y: number;
+  // Position of the REAR AXLE CENTER (not car center)
+  rearAxleX: number;
+  rearAxleY: number;
   heading: number; // radians, 0 = pointing right
   steeringAngle: number; // front wheel angle in radians
-  velocity: number; // pixels per second
+  velocity: number; // pixels per second (at rear axle)
 }
 
 export interface CarConfig {
@@ -16,12 +18,12 @@ export interface CarConfig {
   wheelbase: number; // distance between front and rear axles
   maxSteeringAngle: number; // max steering angle in radians (full lock)
   speed: number; // constant movement speed
+  rearOverhang: number; // distance from rear axle to back of car
 }
 
 export interface WheelTrailPoint {
   x: number;
   y: number;
-  isFront: boolean;
 }
 
 // Steering positions: -1 = full left, -0.5 = half left, 0 = straight, 0.5 = half right, 1 = full right
@@ -30,34 +32,37 @@ export type SteeringPosition = -1 | -0.5 | 0 | 0.5 | 1;
 // Realistic car dimensions (scaled: 1 pixel ≈ 3cm)
 // Real dimensions in mm, converted to pixels
 
-// Kia Picanto: 3595mm x 1595mm, wheelbase 2400mm
+// Kia Picanto: 3595mm x 1595mm, wheelbase 2400mm, rear overhang ~600mm
 export const PICANTO_CONFIG: CarConfig = {
   name: 'Kia Picanto',
-  length: 120,  // 3600mm / 30
-  width: 53,    // 1600mm / 30
-  wheelbase: 80, // 2400mm / 30
+  length: 120,
+  width: 53,
+  wheelbase: 80,
   maxSteeringAngle: Math.PI / 4, // ~45 degrees
   speed: 60,
+  rearOverhang: 20,
 };
 
 // Mid-size SUV (Hyundai Tucson): 4500mm x 1865mm, wheelbase 2680mm
 export const SUV_CONFIG: CarConfig = {
   name: 'SUV',
-  length: 150,  // 4500mm / 30
-  width: 62,    // 1860mm / 30
-  wheelbase: 89, // 2680mm / 30
-  maxSteeringAngle: Math.PI / 4.5, // slightly less than small car
+  length: 150,
+  width: 62,
+  wheelbase: 89,
+  maxSteeringAngle: Math.PI / 4.5,
   speed: 60,
+  rearOverhang: 30,
 };
 
 // Hyundai Staria Load: 5253mm x 1997mm, wheelbase 3273mm
 export const STARIA_CONFIG: CarConfig = {
   name: 'Hyundai Staria',
-  length: 175,  // 5250mm / 30
-  width: 67,    // 2000mm / 30
-  wheelbase: 109, // 3270mm / 30
-  maxSteeringAngle: Math.PI / 5, // larger vehicles have less steering angle
+  length: 175,
+  width: 67,
+  wheelbase: 109,
+  maxSteeringAngle: Math.PI / 5,
   speed: 60,
+  rearOverhang: 33,
 };
 
 export const CAR_CONFIGS: CarConfig[] = [PICANTO_CONFIG, SUV_CONFIG, STARIA_CONFIG];
@@ -71,9 +76,11 @@ export class Car {
 
   constructor(x: number, y: number, heading: number = 0, config: CarConfig = PICANTO_CONFIG) {
     this.config = config;
+    // x, y passed in is the car center, convert to rear axle position
+    const centerOffset = (config.length / 2) - config.rearOverhang;
     this.state = {
-      x,
-      y,
+      rearAxleX: x - Math.cos(heading) * centerOffset,
+      rearAxleY: y - Math.sin(heading) * centerOffset,
       heading,
       steeringAngle: 0,
       velocity: 0,
@@ -84,9 +91,19 @@ export class Car {
     this.config = config;
   }
 
+  // Get the car center position (for rendering)
+  getCarCenter(): { x: number; y: number } {
+    const { rearAxleX, rearAxleY, heading } = this.state;
+    const { length, rearOverhang } = this.config;
+    // Car center is ahead of rear axle by half the distance from rear to front
+    const centerOffset = (length / 2) - rearOverhang;
+    return {
+      x: rearAxleX + Math.cos(heading) * centerOffset,
+      y: rearAxleY + Math.sin(heading) * centerOffset,
+    };
+  }
+
   // Update car physics based on inputs
-  // movement: 1 = forward, -1 = reverse, 0 = stopped
-  // steeringPosition: -1, -0.5, 0, 0.5, 1
   update(dt: number, input: { movement: number; steeringPosition: SteeringPosition }) {
     const { state, config } = this;
 
@@ -105,21 +122,26 @@ export class Car {
       // Record wheel positions before moving (for trail)
       this.recordWheelPositions();
 
-      // Bicycle model physics
+      // Bicycle model physics - REAR AXLE based
+      // The rear axle moves along the heading direction
+      // The heading changes based on the steering angle
+
       if (Math.abs(state.steeringAngle) > 0.001) {
-        // Turning radius = wheelbase / tan(steering_angle)
+        // Turning radius (from rear axle to instantaneous center of rotation)
+        // R = wheelbase / tan(steering_angle)
         const turningRadius = config.wheelbase / Math.tan(state.steeringAngle);
 
-        // Angular velocity = linear velocity / turning radius
+        // Angular velocity = rear axle velocity / turning radius
         const angularVelocity = state.velocity / turningRadius;
 
         // Update heading
         state.heading += angularVelocity * dt;
       }
 
-      // Update position (move in direction of heading)
-      state.x += Math.cos(state.heading) * state.velocity * dt;
-      state.y += Math.sin(state.heading) * state.velocity * dt;
+      // Move the rear axle along the heading direction
+      // This is the key difference - rear axle always moves along heading
+      state.rearAxleX += Math.cos(state.heading) * state.velocity * dt;
+      state.rearAxleY += Math.sin(state.heading) * state.velocity * dt;
 
       // Normalize heading to [0, 2π]
       state.heading = ((state.heading % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -127,17 +149,17 @@ export class Car {
   }
 
   private recordWheelPositions() {
-    const wheels = this.getWheels();
+    // Record the center of front and rear axles
+    const { rearAxleX, rearAxleY, heading } = this.state;
+    const { wheelbase } = this.config;
 
-    // Get average position of front wheels and rear wheels
-    const frontX = (wheels[0].x + wheels[1].x) / 2;
-    const frontY = (wheels[0].y + wheels[1].y) / 2;
-    const rearX = (wheels[2].x + wheels[3].x) / 2;
-    const rearY = (wheels[2].y + wheels[3].y) / 2;
+    // Front axle center
+    const frontAxleX = rearAxleX + Math.cos(heading) * wheelbase;
+    const frontAxleY = rearAxleY + Math.sin(heading) * wheelbase;
 
     // Add to trails
-    this.frontWheelTrail.push({ x: frontX, y: frontY, isFront: true });
-    this.rearWheelTrail.push({ x: rearX, y: rearY, isFront: false });
+    this.frontWheelTrail.push({ x: frontAxleX, y: frontAxleY });
+    this.rearWheelTrail.push({ x: rearAxleX, y: rearAxleY });
 
     // Limit trail length
     if (this.frontWheelTrail.length > this.maxTrailLength) {
@@ -155,25 +177,28 @@ export class Car {
 
   // Get wheel positions and angles for rendering
   getWheels(): { x: number; y: number; angle: number; isfront: boolean }[] {
-    const { x, y, heading, steeringAngle } = this.state;
+    const { rearAxleX, rearAxleY, heading, steeringAngle } = this.state;
     const { wheelbase, width } = this.config;
-    const halfWheelbase = wheelbase / 2;
     const halfWidth = width / 2 - 5; // Wheels slightly inset
 
     const cos = Math.cos(heading);
     const sin = Math.sin(heading);
 
-    // Front wheels (steered)
-    const frontLeftX = x + cos * halfWheelbase - sin * halfWidth;
-    const frontLeftY = y + sin * halfWheelbase + cos * halfWidth;
-    const frontRightX = x + cos * halfWheelbase + sin * halfWidth;
-    const frontRightY = y + sin * halfWheelbase - cos * halfWidth;
+    // Front axle center
+    const frontAxleX = rearAxleX + cos * wheelbase;
+    const frontAxleY = rearAxleY + sin * wheelbase;
 
-    // Rear wheels (fixed)
-    const rearLeftX = x - cos * halfWheelbase - sin * halfWidth;
-    const rearLeftY = y - sin * halfWheelbase + cos * halfWidth;
-    const rearRightX = x - cos * halfWheelbase + sin * halfWidth;
-    const rearRightY = y - sin * halfWheelbase - cos * halfWidth;
+    // Front wheels (steered) - positioned on front axle
+    const frontLeftX = frontAxleX - sin * halfWidth;
+    const frontLeftY = frontAxleY + cos * halfWidth;
+    const frontRightX = frontAxleX + sin * halfWidth;
+    const frontRightY = frontAxleY - cos * halfWidth;
+
+    // Rear wheels (fixed) - positioned on rear axle
+    const rearLeftX = rearAxleX - sin * halfWidth;
+    const rearLeftY = rearAxleY + cos * halfWidth;
+    const rearRightX = rearAxleX + sin * halfWidth;
+    const rearRightY = rearAxleY - cos * halfWidth;
 
     return [
       { x: frontLeftX, y: frontLeftY, angle: heading + steeringAngle, isfront: true },
@@ -185,26 +210,49 @@ export class Car {
 
   // Get corners of the car for rendering
   getCorners(): { x: number; y: number }[] {
-    const { x, y, heading } = this.state;
-    const { length, width } = this.config;
-    const halfLength = length / 2;
+    const { rearAxleX, rearAxleY, heading } = this.state;
+    const { length, width, rearOverhang } = this.config;
     const halfWidth = width / 2;
 
     const cos = Math.cos(heading);
     const sin = Math.sin(heading);
 
+    // Calculate front and back distances from rear axle
+    const frontDist = length - rearOverhang;
+    const backDist = rearOverhang;
+
+    // Four corners
     return [
-      { x: x + cos * halfLength - sin * halfWidth, y: y + sin * halfLength + cos * halfWidth },
-      { x: x + cos * halfLength + sin * halfWidth, y: y + sin * halfLength - cos * halfWidth },
-      { x: x - cos * halfLength + sin * halfWidth, y: y - sin * halfLength - cos * halfWidth },
-      { x: x - cos * halfLength - sin * halfWidth, y: y - sin * halfLength + cos * halfWidth },
+      // Front-left
+      {
+        x: rearAxleX + cos * frontDist - sin * halfWidth,
+        y: rearAxleY + sin * frontDist + cos * halfWidth
+      },
+      // Front-right
+      {
+        x: rearAxleX + cos * frontDist + sin * halfWidth,
+        y: rearAxleY + sin * frontDist - cos * halfWidth
+      },
+      // Rear-right
+      {
+        x: rearAxleX - cos * backDist + sin * halfWidth,
+        y: rearAxleY - sin * backDist - cos * halfWidth
+      },
+      // Rear-left
+      {
+        x: rearAxleX - cos * backDist - sin * halfWidth,
+        y: rearAxleY - sin * backDist + cos * halfWidth
+      },
     ];
   }
 
   reset(x: number, y: number, heading: number = 0) {
+    // x, y is car center, convert to rear axle
+    const { rearOverhang, length } = this.config;
+    const centerOffset = (length / 2) - rearOverhang;
     this.state = {
-      x,
-      y,
+      rearAxleX: x - Math.cos(heading) * centerOffset,
+      rearAxleY: y - Math.sin(heading) * centerOffset,
       heading,
       steeringAngle: 0,
       velocity: 0,

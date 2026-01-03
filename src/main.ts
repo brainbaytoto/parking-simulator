@@ -104,12 +104,12 @@ class ParkingSimulator {
     const input = this.controls.getInput();
     this.car.update(dt, input);
 
-    // Keep car within bounds
+    // Keep car within bounds (using rear axle position)
     if (this.scenario.bounds) {
       const { minX, minY, maxX, maxY } = this.scenario.bounds;
       const margin = 50;
-      this.car.state.x = Math.max(minX + margin, Math.min(maxX - margin, this.car.state.x));
-      this.car.state.y = Math.max(minY + margin, Math.min(maxY - margin, this.car.state.y));
+      this.car.state.rearAxleX = Math.max(minX + margin, Math.min(maxX - margin, this.car.state.rearAxleX));
+      this.car.state.rearAxleY = Math.max(minY + margin, Math.min(maxY - margin, this.car.state.rearAxleY));
     }
   }
 
