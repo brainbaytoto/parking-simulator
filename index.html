@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Parking Simulator - Learn How Cars Move</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚗</text></svg>">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="canvas"></canvas>
+
+      <!-- Top UI Bar -->
+      <div id="ui">
+        <div id="scenario-selector">
+          <button class="scenario-btn active" data-scenario="free">Free Drive</button>
+          <button class="scenario-btn" data-scenario="parallel">Parallel</button>
+          <button class="scenario-btn" data-scenario="bay">Bay</button>
+        </div>
+        <div id="car-selector">
+          <button class="car-btn active">Picanto</button>
+          <button class="car-btn">SUV</button>
+          <button class="car-btn">Staria</button>
+        </div>
+        <button id="reset-btn">Reset</button>
+        <button id="clear-trails-btn">Clear Trails</button>
+      </div>
+
+      <!-- Controls hint -->
+      <div id="controls-hint">
+        <span class="desktop-hint">↑↓ Move | A S D F G Steering</span>
+        <span class="mobile-hint">Use buttons below</span>
+      </div>
+
+      <!-- Control Panel -->
+      <div id="control-panel">
+        <!-- Steering buttons -->
+        <div id="steering-controls">
+          <span class="control-label">Steering</span>
+          <div id="steering-buttons">
+            <button id="btn-hard-left" class="steer-btn">Full<br>Left</button>
+            <button id="btn-half-left" class="steer-btn">Half<br>Left</button>
+            <button id="btn-straight" class="steer-btn active">Straight</button>
+            <button id="btn-half-right" class="steer-btn">Half<br>Right</button>
+            <button id="btn-hard-right" class="steer-btn">Full<br>Right</button>
+          </div>
+          <div class="key-hints">
+            <span>A</span>
+            <span>S</span>
+            <span>D</span>
+            <span>F</span>
+            <span>G</span>
+          </div>
+        </div>
+
+        <!-- Movement buttons -->
+        <div id="movement-controls">
+          <span class="control-label">Movement</span>
+          <div id="movement-buttons">
+            <button id="btn-forward" class="move-btn">Forward ↑</button>
+            <button id="btn-reverse" class="move-btn">Reverse ↓</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info panel -->
+      <div id="info-panel">
+        <div class="info-item">
+          <span class="label">Car:</span>
+          <span id="car-display">Kia Picanto</span>
+        </div>
+        <div class="info-item">
+          <span class="label">Steering:</span>
+          <span id="steering-display">0°</span>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
