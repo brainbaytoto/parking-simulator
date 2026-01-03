@@ -59,33 +59,55 @@ export class Renderer {
 
   drawWheelTrails(car: Car) {
     const ctx = this.ctx;
+    const wheelWidth = 12; // Match the wheel rendering width
+    const { wheelTrails } = car;
 
-    // Draw rear wheel trail (red/orange - important for learning)
-    if (car.rearWheelTrail.length > 1) {
-      ctx.strokeStyle = '#e74c3c'; // Red for rear wheels
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = wheelWidth;
 
+    // Draw rear wheel trails (red - important for learning)
+    ctx.strokeStyle = '#c0392b'; // Dark red for rear wheels
+
+    // Rear left
+    if (wheelTrails.rearLeft.length > 1) {
       ctx.beginPath();
-      ctx.moveTo(car.rearWheelTrail[0].x, car.rearWheelTrail[0].y);
-      for (let i = 1; i < car.rearWheelTrail.length; i++) {
-        ctx.lineTo(car.rearWheelTrail[i].x, car.rearWheelTrail[i].y);
+      ctx.moveTo(wheelTrails.rearLeft[0].x, wheelTrails.rearLeft[0].y);
+      for (let i = 1; i < wheelTrails.rearLeft.length; i++) {
+        ctx.lineTo(wheelTrails.rearLeft[i].x, wheelTrails.rearLeft[i].y);
       }
       ctx.stroke();
     }
 
-    // Draw front wheel trail (blue)
-    if (car.frontWheelTrail.length > 1) {
-      ctx.strokeStyle = '#3498db'; // Blue for front wheels
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
+    // Rear right
+    if (wheelTrails.rearRight.length > 1) {
       ctx.beginPath();
-      ctx.moveTo(car.frontWheelTrail[0].x, car.frontWheelTrail[0].y);
-      for (let i = 1; i < car.frontWheelTrail.length; i++) {
-        ctx.lineTo(car.frontWheelTrail[i].x, car.frontWheelTrail[i].y);
+      ctx.moveTo(wheelTrails.rearRight[0].x, wheelTrails.rearRight[0].y);
+      for (let i = 1; i < wheelTrails.rearRight.length; i++) {
+        ctx.lineTo(wheelTrails.rearRight[i].x, wheelTrails.rearRight[i].y);
+      }
+      ctx.stroke();
+    }
+
+    // Draw front wheel trails (blue)
+    ctx.strokeStyle = '#2980b9'; // Dark blue for front wheels
+
+    // Front left
+    if (wheelTrails.frontLeft.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(wheelTrails.frontLeft[0].x, wheelTrails.frontLeft[0].y);
+      for (let i = 1; i < wheelTrails.frontLeft.length; i++) {
+        ctx.lineTo(wheelTrails.frontLeft[i].x, wheelTrails.frontLeft[i].y);
+      }
+      ctx.stroke();
+    }
+
+    // Front right
+    if (wheelTrails.frontRight.length > 1) {
+      ctx.beginPath();
+      ctx.moveTo(wheelTrails.frontRight[0].x, wheelTrails.frontRight[0].y);
+      for (let i = 1; i < wheelTrails.frontRight.length; i++) {
+        ctx.lineTo(wheelTrails.frontRight[i].x, wheelTrails.frontRight[i].y);
       }
       ctx.stroke();
     }

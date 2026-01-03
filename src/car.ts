@@ -26,6 +26,13 @@ export interface WheelTrailPoint {
   y: number;
 }
 
+export interface WheelTrails {
+  frontLeft: WheelTrailPoint[];
+  frontRight: WheelTrailPoint[];
+  rearLeft: WheelTrailPoint[];
+  rearRight: WheelTrailPoint[];
+}
+
 // Steering positions: -1 = full left, -0.5 = half left, 0 = straight, 0.5 = half right, 1 = full right
 export type SteeringPosition = -1 | -0.5 | 0 | 0.5 | 1;
 
@@ -70,9 +77,12 @@ export const CAR_CONFIGS: CarConfig[] = [PICANTO_CONFIG, SUV_CONFIG, STARIA_CONF
 export class Car {
   state: CarState;
   config: CarConfig;
-  frontWheelTrail: WheelTrailPoint[] = [];
-  rearWheelTrail: WheelTrailPoint[] = [];
-  private maxTrailLength = 500;
+  wheelTrails: WheelTrails = {
+    frontLeft: [],
+    frontRight: [],
+    rearLeft: [],
+    rearRight: [],
+  };
 
   constructor(x: number, y: number, heading: number = 0, config: CarConfig = PICANTO_CONFIG) {
     this.config = config;
@@ -149,30 +159,23 @@ export class Car {
   }
 
   private recordWheelPositions() {
-    // Record the center of front and rear axles
-    const { rearAxleX, rearAxleY, heading } = this.state;
-    const { wheelbase } = this.config;
+    // Record each wheel's position
+    const wheels = this.getWheels();
 
-    // Front axle center
-    const frontAxleX = rearAxleX + Math.cos(heading) * wheelbase;
-    const frontAxleY = rearAxleY + Math.sin(heading) * wheelbase;
-
-    // Add to trails
-    this.frontWheelTrail.push({ x: frontAxleX, y: frontAxleY });
-    this.rearWheelTrail.push({ x: rearAxleX, y: rearAxleY });
-
-    // Limit trail length
-    if (this.frontWheelTrail.length > this.maxTrailLength) {
-      this.frontWheelTrail.shift();
-    }
-    if (this.rearWheelTrail.length > this.maxTrailLength) {
-      this.rearWheelTrail.shift();
-    }
+    // wheels[0] = front left, [1] = front right, [2] = rear left, [3] = rear right
+    this.wheelTrails.frontLeft.push({ x: wheels[0].x, y: wheels[0].y });
+    this.wheelTrails.frontRight.push({ x: wheels[1].x, y: wheels[1].y });
+    this.wheelTrails.rearLeft.push({ x: wheels[2].x, y: wheels[2].y });
+    this.wheelTrails.rearRight.push({ x: wheels[3].x, y: wheels[3].y });
   }
 
   clearTrails() {
-    this.frontWheelTrail = [];
-    this.rearWheelTrail = [];
+    this.wheelTrails = {
+      frontLeft: [],
+      frontRight: [],
+      rearLeft: [],
+      rearRight: [],
+    };
   }
 
   // Get wheel positions and angles for rendering
