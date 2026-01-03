@@ -12,18 +12,77 @@
 
       <!-- Top UI Bar -->
       <div id="ui">
-        <div id="scenario-selector">
-          <button class="scenario-btn active" data-scenario="free">Free Drive</button>
-          <button class="scenario-btn" data-scenario="parallel">Parallel</button>
-          <button class="scenario-btn" data-scenario="bay">Bay</button>
+        <!-- Mode toggle -->
+        <div id="mode-toggle">
+          <button id="drive-mode-btn" class="mode-btn active">Drive</button>
+          <button id="edit-mode-btn" class="mode-btn">Edit Map</button>
         </div>
-        <div id="car-selector">
-          <button class="car-btn active">Picanto</button>
-          <button class="car-btn">SUV</button>
-          <button class="car-btn">Staria</button>
+
+        <!-- Drive mode controls -->
+        <div id="drive-controls">
+          <div id="scenario-selector">
+            <div class="scenario-dropdown">
+              <button class="scenario-btn active" data-scenario="free">Free Drive</button>
+              <div class="difficulty-menu">
+                <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+              </div>
+            </div>
+            <div class="scenario-dropdown">
+              <button class="scenario-btn" data-scenario="parallel">Parallel</button>
+              <div class="difficulty-menu">
+                <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+              </div>
+            </div>
+            <div class="scenario-dropdown">
+              <button class="scenario-btn" data-scenario="bay">Bay</button>
+              <div class="difficulty-menu">
+                <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn active" data-difficulty="medium">Medium</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+              </div>
+            </div>
+            <button class="scenario-btn" data-scenario="custom">Custom</button>
+          </div>
+          <div id="car-selector">
+            <button class="car-btn active">Picanto</button>
+            <button class="car-btn">SUV</button>
+            <button class="car-btn">Staria</button>
+          </div>
+          <button id="reset-btn">Reset</button>
+          <button id="clear-trails-btn">Clear Trails</button>
+          <label id="front-trails-toggle">
+            <input type="checkbox" id="show-front-trails" checked>
+            <span>Front Trails</span>
+          </label>
         </div>
-        <button id="reset-btn">Reset</button>
-        <button id="clear-trails-btn">Clear Trails</button>
+
+        <!-- Edit mode controls -->
+        <div id="edit-controls" style="display: none;">
+          <div id="tool-selector">
+            <button class="tool-btn active" data-tool="select">Select</button>
+            <button class="tool-btn" data-tool="car">Car</button>
+            <button class="tool-btn" data-tool="wall">Wall</button>
+            <button class="tool-btn" data-tool="curb">Curb</button>
+            <button class="tool-btn" data-tool="parking">Bay</button>
+            <button class="tool-btn" data-tool="start">Start</button>
+          </div>
+          <div id="car-size-selector" style="display: none;">
+            <button class="size-btn active" data-size="picanto">Picanto</button>
+            <button class="size-btn" data-size="suv">SUV</button>
+            <button class="size-btn" data-size="staria">Staria</button>
+          </div>
+          <button id="rotate-btn">Rotate (R)</button>
+          <button id="delete-btn">Delete (Del)</button>
+          <div id="map-actions">
+            <button id="save-map-btn">Save</button>
+            <button id="load-map-btn">Load</button>
+            <button id="clear-map-btn">Clear</button>
+          </div>
+        </div>
       </div>
 
       <!-- Controls hint -->

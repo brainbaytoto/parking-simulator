@@ -1,7 +1,19 @@
 // Canvas rendering utilities
 
 import { Car } from './car';
-import type { Obstacle } from './scenarios';
+import type { Obstacle, Surface, Marking } from './scenarios';
+import type { MapObject, StartPosition } from './editor';
+
+// Environment color palette
+const COLORS = {
+  asphalt: '#3d3d3d',
+  grass: '#3d6b1e',
+  natureStrip: '#4a7c23',
+  footpath: '#c8c8c8',
+  curb: '#b0b0b0',
+  laneMarking: '#ffffff',
+  bayMarking: '#ffd700',
+};
 
 export class Renderer {
   private canvas: HTMLCanvasElement;
@@ -57,7 +69,65 @@ export class Renderer {
     }
   }
 
-  drawWheelTrails(car: Car) {
+  // Environment rendering methods
+  drawSurface(surface: Surface) {
+    const ctx = this.ctx;
+
+    switch (surface.type) {
+      case 'grass':
+        ctx.fillStyle = COLORS.grass;
+        break;
+      case 'asphalt':
+        ctx.fillStyle = COLORS.asphalt;
+        break;
+      case 'footpath':
+        ctx.fillStyle = COLORS.footpath;
+        break;
+      case 'curb':
+        ctx.fillStyle = COLORS.curb;
+        break;
+      default:
+        ctx.fillStyle = '#666666';
+    }
+
+    ctx.fillRect(surface.x, surface.y, surface.width, surface.height);
+  }
+
+  drawMarking(marking: Marking) {
+    const ctx = this.ctx;
+
+    ctx.strokeStyle = marking.type === 'bay' ? COLORS.bayMarking : COLORS.laneMarking;
+    ctx.lineWidth = marking.type === 'bay' ? 3 : 2;
+    ctx.lineCap = 'round';
+
+    if (marking.dashed) {
+      ctx.setLineDash([15, 10]);
+    } else {
+      ctx.setLineDash([]);
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(marking.x1, marking.y1);
+    ctx.lineTo(marking.x2, marking.y2);
+    ctx.stroke();
+
+    // Reset line dash
+    ctx.setLineDash([]);
+  }
+
+  drawEnvironment(surfaces: Surface[], markings: Marking[]) {
+    // Draw surfaces first (back to front order)
+    for (const surface of surfaces) {
+      this.drawSurface(surface);
+    }
+
+    // Then draw markings on top
+    for (const marking of markings) {
+      this.drawMarking(marking);
+    }
+  }
+
+  drawWheelTrails(car: Car, showFrontTrails: boolean = true) {
     const ctx = this.ctx;
     const wheelWidth = 12; // Match the wheel rendering width
     const { wheelTrails } = car;
@@ -89,27 +159,29 @@ export class Renderer {
       ctx.stroke();
     }
 
-    // Draw front wheel trails (blue)
-    ctx.strokeStyle = '#2980b9'; // Dark blue for front wheels
+    // Draw front wheel trails (blue) - only if enabled
+    if (showFrontTrails) {
+      ctx.strokeStyle = '#2980b9'; // Dark blue for front wheels
 
-    // Front left
-    if (wheelTrails.frontLeft.length > 1) {
-      ctx.beginPath();
-      ctx.moveTo(wheelTrails.frontLeft[0].x, wheelTrails.frontLeft[0].y);
-      for (let i = 1; i < wheelTrails.frontLeft.length; i++) {
-        ctx.lineTo(wheelTrails.frontLeft[i].x, wheelTrails.frontLeft[i].y);
+      // Front left
+      if (wheelTrails.frontLeft.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(wheelTrails.frontLeft[0].x, wheelTrails.frontLeft[0].y);
+        for (let i = 1; i < wheelTrails.frontLeft.length; i++) {
+          ctx.lineTo(wheelTrails.frontLeft[i].x, wheelTrails.frontLeft[i].y);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
-    }
 
-    // Front right
-    if (wheelTrails.frontRight.length > 1) {
-      ctx.beginPath();
-      ctx.moveTo(wheelTrails.frontRight[0].x, wheelTrails.frontRight[0].y);
-      for (let i = 1; i < wheelTrails.frontRight.length; i++) {
-        ctx.lineTo(wheelTrails.frontRight[i].x, wheelTrails.frontRight[i].y);
+      // Front right
+      if (wheelTrails.frontRight.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(wheelTrails.frontRight[0].x, wheelTrails.frontRight[0].y);
+        for (let i = 1; i < wheelTrails.frontRight.length; i++) {
+          ctx.lineTo(wheelTrails.frontRight[i].x, wheelTrails.frontRight[i].y);
+        }
+        ctx.stroke();
       }
-      ctx.stroke();
     }
   }
 
@@ -261,27 +333,135 @@ export class Renderer {
     ctx.restore();
   }
 
-  drawTrailLegend() {
+  drawTrailLegend(showFrontTrails: boolean = true) {
     const ctx = this.ctx;
     const x = this.width - 150;
-    const y = this.height - 60;
+    const legendHeight = showFrontTrails ? 55 : 35;
+    const y = this.height - (showFrontTrails ? 60 : 40);
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.roundRect(x - 10, y - 10, 150, 55, 8);
+    ctx.beginPath();
+    ctx.roundRect(x - 10, y - 10, 150, legendHeight, 8);
     ctx.fill();
 
     ctx.font = '12px sans-serif';
 
-    // Front wheel legend
-    ctx.fillStyle = '#3498db';
-    ctx.fillRect(x, y, 20, 3);
-    ctx.fillStyle = '#fff';
-    ctx.fillText('Front wheels', x + 30, y + 5);
+    // Front wheel legend (only if shown)
+    if (showFrontTrails) {
+      ctx.fillStyle = '#3498db';
+      ctx.fillRect(x, y, 20, 3);
+      ctx.fillStyle = '#fff';
+      ctx.fillText('Front wheels', x + 30, y + 5);
 
-    // Rear wheel legend
-    ctx.fillStyle = '#e74c3c';
-    ctx.fillRect(x, y + 25, 20, 3);
+      // Rear wheel legend
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(x, y + 25, 20, 3);
+      ctx.fillStyle = '#fff';
+      ctx.fillText('Rear wheels', x + 30, y + 30);
+    } else {
+      // Only rear wheel legend
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(x, y, 20, 3);
+      ctx.fillStyle = '#fff';
+      ctx.fillText('Rear wheels', x + 30, y + 5);
+    }
+  }
+
+  // Editor rendering methods
+  drawEditorObjects(objects: MapObject[], selectedId: string | null) {
+    const ctx = this.ctx;
+
+    for (const obj of objects) {
+      ctx.save();
+      ctx.translate(obj.x, obj.y);
+      ctx.rotate(obj.rotation);
+
+      const isSelected = obj.id === selectedId;
+
+      if (obj.type === 'car') {
+        // Parked car (gray)
+        ctx.fillStyle = '#636e72';
+        ctx.strokeStyle = isSelected ? '#f1c40f' : '#2d3436';
+        ctx.lineWidth = isSelected ? 3 : 2;
+        ctx.beginPath();
+        ctx.roundRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height, 5);
+        ctx.fill();
+        ctx.stroke();
+
+        // Windows
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath();
+        ctx.roundRect(-obj.width / 2 + obj.width * 0.6, -obj.height / 2 + 5, obj.width * 0.25, obj.height - 10, 3);
+        ctx.fill();
+      } else if (obj.type === 'wall') {
+        ctx.fillStyle = '#b2bec3';
+        ctx.strokeStyle = isSelected ? '#f1c40f' : '#636e72';
+        ctx.lineWidth = isSelected ? 3 : 1;
+        ctx.fillRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height);
+        ctx.strokeRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height);
+      } else if (obj.type === 'curb') {
+        ctx.fillStyle = '#dfe6e9';
+        ctx.strokeStyle = isSelected ? '#f1c40f' : '#b2bec3';
+        ctx.lineWidth = isSelected ? 3 : 1;
+        ctx.fillRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height);
+        ctx.strokeRect(-obj.width / 2, -obj.height / 2, obj.width, obj.height);
+      } else if (obj.type === 'parking') {
+        // Parking bay lines
+        ctx.strokeStyle = isSelected ? '#f1c40f' : '#ffeaa7';
+        ctx.lineWidth = isSelected ? 4 : 3;
+        ctx.setLineDash([]);
+
+        const halfWidth = obj.width / 2;
+        const halfHeight = obj.height / 2;
+
+        // Draw U-shape
+        ctx.beginPath();
+        ctx.moveTo(-halfWidth, -halfHeight);
+        ctx.lineTo(-halfWidth, halfHeight);
+        ctx.lineTo(halfWidth, halfHeight);
+        ctx.lineTo(halfWidth, -halfHeight);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  drawStartPosition(startPosition: StartPosition, isSelected: boolean) {
+    const ctx = this.ctx;
+
+    ctx.save();
+    ctx.translate(startPosition.x, startPosition.y);
+    ctx.rotate(startPosition.heading);
+
+    // Draw a car outline to show start position
+    const width = 50;
+    const height = 100;
+
+    ctx.strokeStyle = isSelected ? '#f1c40f' : '#27ae60';
+    ctx.lineWidth = isSelected ? 4 : 3;
+    ctx.setLineDash([5, 5]);
+
+    ctx.beginPath();
+    ctx.roundRect(-width / 2, -height / 2, width, height, 5);
+    ctx.stroke();
+
+    // Draw arrow showing direction
+    ctx.setLineDash([]);
+    ctx.fillStyle = isSelected ? '#f1c40f' : '#27ae60';
+    ctx.beginPath();
+    ctx.moveTo(0, -height / 2 - 10);
+    ctx.lineTo(-10, -height / 2 + 5);
+    ctx.lineTo(10, -height / 2 + 5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Label
     ctx.fillStyle = '#fff';
-    ctx.fillText('Rear wheels', x + 30, y + 30);
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('START', 0, 5);
+
+    ctx.restore();
   }
 }

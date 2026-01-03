@@ -38,8 +38,49 @@ html, body {
   z-index: 10;
 }
 
+/* Mode toggle */
+#mode-toggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.mode-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.mode-btn:hover {
+  color: #fff;
+}
+
+.mode-btn.active {
+  background: #9b59b6;
+  color: #fff;
+}
+
+/* Drive/Edit controls containers */
+#drive-controls,
+#edit-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 #scenario-selector,
-#car-selector {
+#car-selector,
+#tool-selector,
+#car-size-selector {
   display: flex;
   gap: 5px;
 }
@@ -69,6 +110,82 @@ html, body {
   background: #00b894;
 }
 
+/* Scenario dropdown */
+.scenario-dropdown {
+  position: relative;
+}
+
+.difficulty-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: rgba(30, 30, 40, 0.95);
+  border-radius: 6px;
+  padding: 4px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 100%;
+  z-index: 20;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.scenario-dropdown:hover .difficulty-menu,
+.scenario-dropdown.open .difficulty-menu {
+  display: flex;
+}
+
+.difficulty-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+
+.difficulty-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.difficulty-btn.active {
+  background: rgba(74, 158, 255, 0.3);
+  color: #4a9eff;
+}
+
+.difficulty-btn[data-difficulty="easy"] {
+  color: #2ecc71;
+}
+
+.difficulty-btn[data-difficulty="medium"] {
+  color: #f39c12;
+}
+
+.difficulty-btn[data-difficulty="hard"] {
+  color: #e74c3c;
+}
+
+.difficulty-btn[data-difficulty="easy"]:hover,
+.difficulty-btn[data-difficulty="easy"].active {
+  background: rgba(46, 204, 113, 0.2);
+}
+
+.difficulty-btn[data-difficulty="medium"]:hover,
+.difficulty-btn[data-difficulty="medium"].active {
+  background: rgba(243, 156, 18, 0.2);
+}
+
+.difficulty-btn[data-difficulty="hard"]:hover,
+.difficulty-btn[data-difficulty="hard"].active {
+  background: rgba(231, 76, 60, 0.2);
+}
+
 #reset-btn,
 #clear-trails-btn {
   padding: 8px 14px;
@@ -88,6 +205,213 @@ html, body {
 #reset-btn:hover,
 #clear-trails-btn:hover {
   opacity: 0.8;
+}
+
+/* Front trails toggle */
+#front-trails-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+}
+
+#front-trails-toggle input {
+  cursor: pointer;
+}
+
+/* Tool buttons */
+.tool-btn,
+.size-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.tool-btn:hover,
+.size-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tool-btn.active {
+  background: #e67e22;
+}
+
+.size-btn.active {
+  background: #00b894;
+}
+
+/* Editor action buttons */
+#rotate-btn,
+#delete-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+#rotate-btn:hover {
+  background: #3498db;
+}
+
+#delete-btn:hover {
+  background: #e74c3c;
+}
+
+/* Map actions */
+#map-actions {
+  display: flex;
+  gap: 5px;
+}
+
+#save-map-btn,
+#load-map-btn,
+#clear-map-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  transition: opacity 0.2s;
+}
+
+#save-map-btn {
+  background: #27ae60;
+}
+
+#load-map-btn {
+  background: #3498db;
+}
+
+#clear-map-btn {
+  background: #e74c3c;
+}
+
+#save-map-btn:hover,
+#load-map-btn:hover,
+#clear-map-btn:hover {
+  opacity: 0.8;
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: #2d3436;
+  border-radius: 12px;
+  padding: 20px;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.modal h3 {
+  color: #fff;
+  margin-bottom: 15px;
+}
+
+.modal input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.modal-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.modal-btn.primary {
+  background: #27ae60;
+  color: #fff;
+}
+
+.modal-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Map list in load modal */
+.map-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+.map-item {
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.map-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.map-item.selected {
+  background: #9b59b6;
+}
+
+.map-item-delete {
+  color: #e74c3c;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Edit mode hint */
+.edit-hint {
+  position: absolute;
+  top: 55px;
+  left: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  z-index: 10;
 }
 
 /* Controls hint */
